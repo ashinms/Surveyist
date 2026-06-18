@@ -1110,7 +1110,44 @@ Format the output strictly as a JSON object conforming to the CumulativeInsights
       }),
       async () => this.mockService.generateCumulativeInsights(profiles, survey),
       'generateCumulativeInsights'
-    );
+    ).then(res => {
+      const output = { ...res };
+      
+      // Normalize key case variations
+      if ((output as any).common_problems && !output.commonProblems) {
+        output.commonProblems = (output as any).common_problems;
+      }
+      if ((output as any).proactive_initiatives && !output.proactiveInitiatives) {
+        output.proactiveInitiatives = (output as any).proactive_initiatives;
+      }
+      if ((output as any).executive_summary && !output.executiveSummary) {
+        output.executiveSummary = (output as any).executive_summary;
+      }
+
+      // Enforce safe array structures
+      if (!Array.isArray(output.commonProblems)) output.commonProblems = [];
+      if (!Array.isArray(output.correlations)) output.correlations = [];
+      if (!Array.isArray(output.proactiveInitiatives)) output.proactiveInitiatives = [];
+
+      // Normalize common problems fields
+      output.commonProblems = output.commonProblems.map((prob: any) => ({
+        problemName: prob.problemName || prob.problem_name || prob.name || 'Unknown Issue',
+        description: prob.description || prob.desc || '',
+        prevalencePercentage: typeof prob.prevalencePercentage === 'number' ? prob.prevalencePercentage :
+                              typeof prob.prevalence_percentage === 'number' ? prob.prevalence_percentage : 50,
+        severity: prob.severity || 'Medium'
+      }));
+
+      // Normalize proactive initiatives fields
+      output.proactiveInitiatives = output.proactiveInitiatives.map((init: any, idx: number) => ({
+        id: init.id || `pro-${Date.now()}-${idx}`,
+        title: init.title || init.name || 'Proactive Event',
+        description: init.description || init.desc || '',
+        completed: !!init.completed
+      }));
+
+      return output;
+    });
   }
 }
 

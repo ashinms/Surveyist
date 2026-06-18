@@ -299,7 +299,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                   Executive Trend Analysis
                 </h3>
                 <p className="text-xs text-white/90 leading-relaxed font-medium">
-                  {insights.executiveSummary}
+                  {insights.executiveSummary || "No summary available."}
                 </p>
               </div>
 
@@ -310,7 +310,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                   Top Community Vulnerabilities
                 </h3>
                 <div className="space-y-3">
-                  {insights.commonProblems.map((prob, i) => {
+                  {(insights.commonProblems || []).map((prob, i) => {
+                    if (!prob) return null;
                     const badgeColor = prob.severity === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
                                        prob.severity === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20' :
                                        'bg-blue-500/20 text-blue-400 border border-blue-500/20';
@@ -318,24 +319,27 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                     return (
                       <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
                         <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-white text-xs">{prob.problemName}</h4>
+                          <h4 className="font-bold text-white text-xs">{prob.problemName || "Unspecified Problem"}</h4>
                           <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${badgeColor}`}>
-                            {prob.severity} Priority
+                            {prob.severity || "Medium"} Priority
                           </span>
                         </div>
-                        <p className="text-xs text-white/70 leading-relaxed">{prob.description}</p>
+                        <p className="text-xs text-white/70 leading-relaxed">{prob.description || ""}</p>
                         
                         {/* Prevalence Progress Bar */}
                         <div className="pt-2 flex items-center gap-3">
                           <span className="text-[9px] font-black text-blue-400 uppercase tracking-tight">Prevalence:</span>
                           <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${prob.prevalencePercentage}%` }} />
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${prob.prevalencePercentage || 0}%` }} />
                           </div>
-                          <span className="text-[10px] font-black text-white/80">{prob.prevalencePercentage}%</span>
+                          <span className="text-[10px] font-black text-white/80">{prob.prevalencePercentage || 0}%</span>
                         </div>
                       </div>
                     );
                   })}
+                  {(!insights.commonProblems || insights.commonProblems.length === 0) && (
+                    <p className="text-xs text-white/40 italic pl-1">No major vulnerabilities identified yet.</p>
+                  )}
                 </div>
               </div>
 
@@ -346,12 +350,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                   Demographic Correlations
                 </h3>
                 <ul className="space-y-2 pt-1">
-                  {insights.correlations.map((c, idx) => (
+                  {(insights.correlations || []).map((c, idx) => (
                     <li key={idx} className="text-xs text-white/80 leading-relaxed flex items-start gap-2">
                       <span className="text-blue-400 mt-0.5">•</span>
                       <span>{c}</span>
                     </li>
                   ))}
+                  {(!insights.correlations || insights.correlations.length === 0) && (
+                    <li className="text-xs text-white/40 italic list-none">No demographic correlations identified.</li>
+                  )}
                 </ul>
               </div>
 
@@ -366,7 +373,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                 </div>
                 
                 <div className="space-y-3">
-                  {insights.proactiveInitiatives.map((init) => {
+                  {(insights.proactiveInitiatives || []).map((init) => {
+                    if (!init) return null;
                     const isCompleted = initiativeStatus[init.id] || false;
                     return (
                       <div 
@@ -378,12 +386,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({ survey, profiles }) 
                           {isCompleted ? <CheckSquare size={16} className="text-green-400" /> : <Square size={16} />}
                         </button>
                         <div className="space-y-1">
-                          <h4 className={`font-bold text-xs ${isCompleted ? 'line-through text-white/40' : 'text-white'}`}>{init.title}</h4>
-                          <p className={`text-[11px] leading-relaxed ${isCompleted ? 'text-white/30' : 'text-white/70'}`}>{init.description}</p>
+                          <h4 className={`font-bold text-xs ${isCompleted ? 'line-through text-white/40' : 'text-white'}`}>{init.title || "Proactive Initiative"}</h4>
+                          <p className={`text-[11px] leading-relaxed ${isCompleted ? 'text-white/30' : 'text-white/70'}`}>{init.description || ""}</p>
                         </div>
                       </div>
                     );
                   })}
+                  {(!insights.proactiveInitiatives || insights.proactiveInitiatives.length === 0) && (
+                    <p className="text-xs text-white/40 italic pl-1">No proactive actions recommended yet.</p>
+                  )}
                 </div>
               </div>
 
