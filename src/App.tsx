@@ -9,6 +9,7 @@ type Tab = 'home' | 'training' | 'record' | 'profiles' | 'initiatives' | 'scheme
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [currentSurvey, setCurrentSurvey] = useState<Survey | null>(null);
+  const [surveys, setSurveys] = useState<Survey[]>([]);
   const [surveyFileBuffer, setSurveyFileBuffer] = useState<ArrayBuffer | null>(null);
   const [isDocxTemplate, setIsDocxTemplate] = useState<boolean>(false);
   const [profiles, setProfiles] = useState<ParticipantProfile[]>([]);
@@ -17,6 +18,10 @@ function App() {
 
   const handleSurveyUploaded = async (survey: Survey, fileBuffer?: ArrayBuffer, fileName?: string) => {
     setCurrentSurvey(survey);
+    setSurveys(prev => {
+      if (prev.some(s => s.id === survey.id || s.name === survey.name)) return prev;
+      return [...prev, survey];
+    });
     if (fileBuffer) {
       setSurveyFileBuffer(fileBuffer);
       setIsDocxTemplate(fileName?.split('.').pop()?.toLowerCase() === 'docx');
@@ -70,18 +75,25 @@ function App() {
     <div className="h-screen h-[100dvh] glass-bg flex flex-col items-center overflow-hidden font-sans">
       <div className="w-full max-w-md h-full flex flex-col relative overflow-hidden glass-container">
         <header className="glass-header p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-black text-white tracking-tighter uppercase">Surveyist</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-xl font-black text-white tracking-tighter uppercase flex-shrink-0">Surveyist</h1>
             {currentSurvey && (
-              <div className="glass-inset px-3 py-1 rounded-full">
-                <span className="text-[10px] font-black text-green-400 uppercase tracking-tighter">Active</span>
+              <div className="glass-inset px-3 py-1 rounded-full max-w-[60%] truncate" title={`Active: ${currentSurvey.name}`}>
+                <span className="text-[9px] font-black text-green-400 uppercase tracking-tighter block truncate">Active: {currentSurvey.name}</span>
               </div>
             )}
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
-          {activeTab === 'home' && <HomeView onSurveyUpload={handleSurveyUploaded} hasSurvey={!!currentSurvey} />}
+          {activeTab === 'home' && (
+            <HomeView 
+              onSurveyUpload={handleSurveyUploaded} 
+              surveys={surveys}
+              currentSurvey={currentSurvey}
+              onSelectSurvey={(s) => { setCurrentSurvey(s); setActiveTab('training'); }}
+            />
+          )}
           {activeTab === 'training' && currentSurvey && <CoachingView survey={currentSurvey} />}
           {activeTab === 'record' && currentSurvey && <RecordingView survey={currentSurvey} onSaveProfile={handleSaveProfile} />}
           {activeTab === 'profiles' && <ProfilesView profiles={profiles} survey={currentSurvey || { id: '', name: '', questions: [] }} surveyFileBuffer={surveyFileBuffer} isDocxTemplate={isDocxTemplate} initiatives={initiatives} onUpdateProfile={u => setProfiles(prev => prev.map(p => p.id === u.id ? u : p))} onSelectProfile={id => { setSelectedProfileId(id); setActiveTab('initiatives'); }} />}

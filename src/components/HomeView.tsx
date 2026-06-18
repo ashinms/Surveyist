@@ -5,8 +5,10 @@ import { fileParser, createAIService } from '../services/services';
 
 export const HomeView: React.FC<{
   onSurveyUpload: (s: Survey, fileBuffer?: ArrayBuffer, fileName?: string) => void;
-  hasSurvey: boolean;
-}> = ({ onSurveyUpload, hasSurvey }) => {
+  surveys: Survey[];
+  currentSurvey: Survey | null;
+  onSelectSurvey: (survey: Survey) => void;
+}> = ({ onSurveyUpload, surveys, currentSurvey, onSelectSurvey }) => {
   const [surveyText, setSurveyText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [inputMode, setInputMode] = useState<'text' | 'file'>('text');
@@ -207,24 +209,34 @@ export const HomeView: React.FC<{
   }
 
   return (
-    <div className="p-6 min-h-full font-sans">
-      <div className="text-center mb-12 pt-8">
-        <h1 className="text-5xl font-black text-white mb-3 tracking-tighter uppercase drop-shadow-lg">Surveyist</h1>
-        <p className="text-white/80 text-xl font-medium max-w-sm mx-auto leading-tight">AI-Driven Precision for Professional Interview Excellence</p>
+    <div className="p-6 min-h-full font-sans space-y-6">
+      <div className="text-center mb-6 pt-6">
+        <h1 className="text-5xl font-black text-white mb-2 tracking-tighter uppercase drop-shadow-lg">Surveyist</h1>
+        <p className="text-white/80 text-base font-medium max-w-xs mx-auto leading-tight">AI-Driven Precision for Professional Interview Excellence</p>
       </div>
 
-      <div className="max-w-2xl mx-auto glass-card p-8 mb-8">
-        <div className="flex gap-4 mb-6">
-          <div className="p-3 glass-inset rounded-2xl"><FileText className="text-blue-400" size={28} /></div>
+      {currentSurvey && (
+        <div className="max-w-2xl mx-auto p-4 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center gap-3 text-left">
+          <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+          <div className="min-w-0">
+            <span className="block text-[8px] font-black text-green-400 uppercase tracking-widest">Active Survey Configured</span>
+            <span className="text-xs font-bold text-white truncate block">{currentSurvey.name}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto glass-card p-6">
+        <div className="flex gap-4 mb-5 text-left">
+          <div className="p-3 glass-inset rounded-2xl"><FileText className="text-blue-400" size={24} /></div>
           <div>
-            <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Import Survey</h2>
-            <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Strict AI Extraction Enabled</p>
+            <h2 className="text-base font-bold text-white uppercase tracking-tight">Import New Survey</h2>
+            <p className="text-[9px] text-white/60 font-bold uppercase tracking-wider">Strict AI Extraction Enabled</p>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
-          <button onClick={() => setInputMode('text')} className={`flex-1 p-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${inputMode === 'text' ? 'glass-button text-white' : 'glass-inset text-white/60'}`}><Type size={16} />Text</button>
-          <button onClick={() => setInputMode('file')} className={`flex-1 p-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${inputMode === 'file' ? 'glass-button text-white' : 'glass-inset text-white/60'}`}><Upload size={16} />File</button>
+        <div className="flex gap-2 mb-5">
+          <button onClick={() => setInputMode('text')} className={`flex-1 py-2 rounded-xl font-black uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 ${inputMode === 'text' ? 'glass-button text-white' : 'glass-inset text-white/60'}`}><Type size={14} />Text</button>
+          <button onClick={() => setInputMode('file')} className={`flex-1 py-2 rounded-xl font-black uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 ${inputMode === 'file' ? 'glass-button text-white' : 'glass-inset text-white/60'}`}><Upload size={14} />File</button>
         </div>
 
         {inputMode === 'text' ? (
@@ -233,14 +245,14 @@ export const HomeView: React.FC<{
               value={surveyText}
               onChange={e => setSurveyText(e.target.value)}
               placeholder="Paste survey questions here..."
-              className="w-full h-64 p-5 glass-inset rounded-3xl focus:outline-none resize-none mb-6 text-sm text-white placeholder-white/40"
+              className="w-full h-44 p-4 glass-inset rounded-2xl focus:outline-none resize-none mb-5 text-xs text-white placeholder-white/40 leading-relaxed"
             />
             <button
               onClick={handleProcess}
               disabled={!surveyText.trim() || isProcessing}
-              className="w-full p-5 glass-button text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:scale-[1.02]"
+              className="w-full py-4 glass-button text-white font-black uppercase tracking-wider text-xs rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.01]"
             >
-              {isProcessing ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <><span>Process with AI</span><ArrowRight size={20} /></>}
+              {isProcessing ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <><span>Process with AI</span><ArrowRight size={16} /></>}
             </button>
           </>
         ) : (
@@ -249,15 +261,44 @@ export const HomeView: React.FC<{
             onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-            className={`p-8 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-blue-500/10' : 'border-white/10 hover:border-white/20'}`}
+            className={`p-6 text-center rounded-2xl border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-blue-500/10' : 'border-white/10 hover:border-white/20'}`}
           >
             <input ref={fileInputRef} type="file" accept=".docx,.pdf,.txt" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} className="hidden" />
-            <Upload className="text-blue-400 mx-auto mb-4" size={32} />
-            <h3 className="text-white font-bold text-lg mb-2 uppercase">Upload Document</h3>
-            <p className="text-white/60 text-xs mb-4">DOCX, PDF, TXT (Max 10MB)</p>
+            <Upload className="text-blue-400 mx-auto mb-3" size={24} />
+            <h3 className="text-white font-bold text-sm mb-1 uppercase">Upload Document</h3>
+            <p className="text-white/60 text-[10px]">DOCX, PDF, TXT (Max 10MB)</p>
           </div>
         )}
       </div>
+
+      {surveys.length > 0 && (
+        <div className="max-w-2xl mx-auto glass-card p-6 text-left space-y-4">
+          <div>
+            <h3 className="text-xs font-black text-white/50 uppercase tracking-widest">Select Active Survey</h3>
+            <p className="text-[9px] text-white/40 font-bold uppercase tracking-wider mt-0.5">Switch survey structure instantly</p>
+          </div>
+          <div className="space-y-2">
+            {surveys.map(s => {
+              const isActive = currentSurvey?.id === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => onSelectSurvey(s)}
+                  className={`w-full p-4 rounded-2xl flex items-center justify-between border transition-all text-left ${isActive ? 'bg-blue-500/15 border-blue-500/30 shadow' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                >
+                  <div className="min-w-0 pr-4">
+                    <h4 className="font-bold text-white text-xs truncate">{s.name}</h4>
+                    <span className="text-[9px] text-white/40 uppercase font-black tracking-wider block mt-0.5">{s.questions.length} Questions</span>
+                  </div>
+                  {isActive && (
+                    <span className="text-[8px] font-black px-2 py-0.5 rounded-md bg-green-400/20 text-green-400 uppercase tracking-widest flex-shrink-0">Active</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
