@@ -277,12 +277,12 @@ export const CoachingView: React.FC<{ survey: Survey }> = ({ survey }) => {
 
               return (
                 <div key={q.id} onClick={() => { setSelectedQuestion(isExpanded ? null : q.id); loadQuestionCoaching(q.id, q.fieldName); }} className="glass-card rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.01] transition-all border border-white/5">
-                  <div className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 glass-inset rounded-xl flex items-center justify-center text-blue-400 font-black text-xs">{q.id.replace('q', '')}</div>
-                      <p className="font-bold text-white text-sm">{q.fieldName}</p>
+                  <div className="p-5 flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 glass-inset rounded-xl flex items-center justify-center text-blue-400 font-black text-xs flex-shrink-0 mt-0.5">{q.id.replace('q', '')}</div>
+                      <p className="font-bold text-white text-sm leading-relaxed pt-0.5">{q.fieldName}</p>
                     </div>
-                    <ChevronRight className={`text-white/40 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`text-white/40 transition-transform mt-3.5 flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
                   </div>
 
                   {isExpanded && (
