@@ -724,21 +724,26 @@ CRITICAL RULES: Stay in character. Never mention AI. Keep it to 1-3 natural conv
       () => this.mockService.generatePracticeFeedback(transcript, survey, coachPersona),
       'generatePracticeFeedback'
     ).then(res => {
-      if (res && Array.isArray(res.improvements)) {
-        res.improvements = res.improvements.map((item: any) => {
-          if (item && typeof item === 'object') {
-            return item.description || item.text || item.improvement || JSON.stringify(item);
-          }
-          return String(item);
-        });
-      }
-      if (res && Array.isArray(res.strengths)) {
-        res.strengths = res.strengths.map((item: any) => {
-          if (item && typeof item === 'object') {
-            return item.description || item.text || item.strength || JSON.stringify(item);
-          }
-          return String(item);
-        });
+      if (res) {
+        res.totalQuestions = survey.questions.length;
+        res.questionsAsked = typeof res.questionsAsked === 'number' ? res.questionsAsked : parseInt(String(res.questionsAsked || 0), 10);
+        
+        if (Array.isArray(res.improvements)) {
+          res.improvements = res.improvements.map((item: any) => {
+            if (item && typeof item === 'object') {
+              return item.description || item.text || item.improvement || JSON.stringify(item);
+            }
+            return String(item);
+          });
+        }
+        if (Array.isArray(res.strengths)) {
+          res.strengths = res.strengths.map((item: any) => {
+            if (item && typeof item === 'object') {
+              return item.description || item.text || item.strength || JSON.stringify(item);
+            }
+            return String(item);
+          });
+        }
       }
       return res;
     });

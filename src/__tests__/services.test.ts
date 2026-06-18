@@ -213,4 +213,42 @@ describe('GroqService Response Parsing & Normalization', () => {
     expect(coaching.followUpTips).toEqual(['Keep asking']);
     expect(coaching.stealthIntegration).toBe('Weave in casually');
   });
+
+  it('includes totalQuestions and parses questionsAsked in practice feedback', async () => {
+    const mockChatCompletion = vi.fn().mockResolvedValue({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            overallScore: 90,
+            duration: '4 mins',
+            questionsAsked: '4',
+            strengths: ['Active listening'],
+            improvements: ['Ask more probing questions']
+          })
+        }
+      }]
+    });
+
+    (service as any).groq = {
+      chat: {
+        completions: {
+          create: mockChatCompletion
+        }
+      }
+    };
+
+    const survey = {
+      id: 's1',
+      name: 'Test Survey',
+      questions: [
+        { id: 'q1', fieldName: 'Q1', type: 'string' as const },
+        { id: 'q2', fieldName: 'Q2', type: 'string' as const },
+        { id: 'q3', fieldName: 'Q3', type: 'string' as const }
+      ]
+    };
+
+    const feedback = await service.generatePracticeFeedback('some transcript', survey);
+    expect(feedback.totalQuestions).toBe(3);
+    expect(feedback.questionsAsked).toBe(4);
+  });
 });
