@@ -52,6 +52,9 @@ export interface CommunityInitiative {
   description: string;
   eligibility: string;
   organisation?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  website?: string;
 }
 
 export interface ReferralRecommendation {
@@ -94,7 +97,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Financial Bursary',
     description: 'Provides temporary financial aid, assistance with household bills, and job search support for low-income individuals or families in Singapore.',
     eligibility: 'Monthly household income of $1,900 and below, or Per Capita Income (PCI) of $650 and below.',
-    organisation: 'Social Service Office (SSO)'
+    organisation: 'Social Service Office (SSO)',
+    contactPhone: '1800-222-0000',
+    contactEmail: 'MSF_ComCare@msf.gov.sg',
+    website: 'www.msf.gov.sg'
   },
   {
     id: 'init-2',
@@ -102,7 +108,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Upskilling',
     description: 'Provides subsidized vocational training courses and job placement services to help Singaporeans reskill and transition to new industries.',
     eligibility: 'Singapore Citizens aged 25 and above; additional subsidies for mid-career workers aged 40+.',
-    organisation: 'SkillsFuture Singapore (SSG)'
+    organisation: 'SkillsFuture Singapore (SSG)',
+    contactPhone: '6785-5785',
+    contactEmail: 'feedback@ssg.gov.sg',
+    website: 'www.skillsfuture.gov.sg'
   },
   {
     id: 'init-3',
@@ -110,7 +119,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Outreach Event',
     description: 'Distributes community vouchers to households to spend at participating local heartland merchants, hawkers, and supermarkets.',
     eligibility: 'All Singaporean households are eligible to claim municipal CDC voucher credits.',
-    organisation: 'Community Development Councils (CDC)'
+    organisation: 'Community Development Councils (CDC)',
+    contactPhone: '6225-5324',
+    contactEmail: 'cdc_vouchers@pa.gov.sg',
+    website: 'vouchers.cdc.gov.sg'
   },
   {
     id: 'init-4',
@@ -118,7 +130,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Activity',
     description: 'Provides one-on-one digital mentoring and subsidized smartphones with data plans to help seniors stay connected.',
     eligibility: 'Singapore Citizens aged 60 and above; eligible for subsidies if holding public assistance cards.',
-    organisation: 'Infocomm Media Development Authority (IMDA)'
+    organisation: 'Infocomm Media Development Authority (IMDA)',
+    contactPhone: '6377-3800',
+    contactEmail: 'sgdigitaloffice@imda.gov.sg',
+    website: 'www.imda.gov.sg/seniorsgodigital'
   },
   {
     id: 'init-5',
@@ -126,7 +141,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Activity',
     description: 'Connects students and young jobseekers with industry professionals for career planning, soft skills development, and guidance.',
     eligibility: 'Malay/Muslim youths, students, and young jobseekers aged 16 to 30.',
-    organisation: 'Yayasan Mendaki'
+    organisation: 'Yayasan Mendaki',
+    contactPhone: '6245-5555',
+    contactEmail: 'mentoring@mendaki.org.sg',
+    website: 'www.mendaki.org.sg'
   },
   {
     id: 'init-6',
@@ -134,7 +152,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Activity',
     description: 'Daily home-delivery of subsidized warm, nutritious lunch and dinner meals to homebound elderly residents.',
     eligibility: 'Frail elderly aged 60+ or disabled individuals living alone with severe mobility constraints.',
-    organisation: 'Touch Community Services'
+    organisation: 'Touch Community Services',
+    contactPhone: '6804-6565',
+    contactEmail: 'homecare@touch.org.sg',
+    website: 'www.touch.org.sg'
   },
   {
     id: 'init-7',
@@ -142,7 +163,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Financial Bursary',
     description: 'Subsidizes infant care, childcare, and kindergarten fees to help lower-income families afford early childhood education.',
     eligibility: 'Singapore Citizen children enrolled in licensed childcare centres; monthly gross household income below $12,000.',
-    organisation: 'Early Childhood Development Agency (ECDA)'
+    organisation: 'Early Childhood Development Agency (ECDA)',
+    contactPhone: '6735-9213',
+    contactEmail: 'contact@ecda.gov.sg',
+    website: 'www.ecda.gov.sg'
   },
   {
     id: 'init-8',
@@ -150,7 +174,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Other',
     description: 'Provides free casework guidance, family mediation, stress counselling, and referral support for residents facing socio-emotional challenges.',
     eligibility: 'Available to all Singapore residents, particularly low-income families and vulnerable individuals.',
-    organisation: 'Family Service Centres (FSC)'
+    organisation: 'Family Service Centres (FSC)',
+    contactPhone: '1800-222-0000',
+    contactEmail: 'fsc_services@msf.gov.sg',
+    website: 'www.msf.gov.sg'
   },
   {
     id: 'init-9',
@@ -158,7 +185,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Activity',
     description: 'Retrofits HDB flats with elder-friendly modifications like grab bars, slip-resistant bathroom tiles, and wheelchair ramps.',
     eligibility: 'Singapore Citizen HDB flat owner with a resident elderly household member aged 65 and above or with mobility impairments.',
-    organisation: 'Housing & Development Board (HDB)'
+    organisation: 'Housing & Development Board (HDB)',
+    contactPhone: '6490-1111',
+    contactEmail: 'hdbfeedback@mailbox.hdb.gov.sg',
+    website: 'www.hdb.gov.sg'
   },
   {
     id: 'init-10',
@@ -166,7 +196,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Other',
     description: 'Offers subsidized computers and broadband internet to low-income households, students, and persons with disabilities.',
     eligibility: 'Singapore Citizens or Permanent Residents; gross monthly household income up to $3,400 or PCI up to $900.',
-    organisation: 'Infocomm Media Development Authority (IMDA)'
+    organisation: 'Infocomm Media Development Authority (IMDA)',
+    contactPhone: '6377-3800',
+    contactEmail: 'neupc@imda.gov.sg',
+    website: 'www.imda.gov.sg/neupc'
   },
   {
     id: 'init-11',
@@ -174,7 +207,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Financial Bursary',
     description: 'Provides quarterly cash payouts to lower-income Singaporean seniors who had low wages during their working years and have minimal family support.',
     eligibility: 'Singapore Citizens aged 65 and above; CPF contributions up to $140,000; household live in 1-5 room HDB flat with PCI up to $1,800.',
-    organisation: 'Central Provident Fund (CPF) Board'
+    organisation: 'Central Provident Fund (CPF) Board',
+    contactPhone: '1800-227-1188',
+    contactEmail: 'member@cpf.gov.sg',
+    website: 'www.cpf.gov.sg'
   },
   {
     id: 'init-12',
@@ -182,7 +218,10 @@ export const DEFAULT_INITIATIVES: CommunityInitiative[] = [
     category: 'Financial Bursary',
     description: 'Boosts the income and CPF savings of lower-income Singaporean workers, encouraging them to stay employed and upskill.',
     eligibility: 'Singapore Citizens aged 30 and above; earning gross monthly income up to $2,500; living in properties with annual value up to $21,000.',
-    organisation: 'Ministry of Manpower (MOM)'
+    organisation: 'Ministry of Manpower (MOM)',
+    contactPhone: '1800-536-8333',
+    contactEmail: 'mom_feedback@mom.gov.sg',
+    website: 'www.mom.gov.sg/workfare'
   }
 ];
 
@@ -375,3 +414,20 @@ export const alignExtractedResponses = (
 
   return aligned;
 };
+
+export interface CumulativeInsights {
+  executiveSummary: string;
+  commonProblems: {
+    problemName: string;
+    description: string;
+    prevalencePercentage: number;
+    severity: 'High' | 'Medium' | 'Low';
+  }[];
+  correlations: string[];
+  proactiveInitiatives: {
+    id: string;
+    title: string;
+    description: string;
+    completed: boolean;
+  }[];
+}

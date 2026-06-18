@@ -11,9 +11,12 @@ export const SchemesView: React.FC<{
   const [organisation, setOrganisation] = useState('');
   const [description, setDescription] = useState('');
   const [eligibility, setEligibility] = useState('');
-  const [filter, setFilter] = useState<'all' | 'Financial Bursary' | 'Upskilling' | 'Activity'>('all');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [website, setWebsite] = useState('');
+  const [filter, setFilter] = useState<'all' | 'Financial Bursary' | 'Upskilling' | 'Activity' | 'Other'>('all');
 
-  const filtered = (initiatives || []).filter(i => i && (filter === 'all' || i.category === filter));
+  const filtered = (initiatives || []).filter(i => i && (filter === 'all' || i.category === filter || (filter === 'Other' && !['Financial Bursary', 'Upskilling', 'Activity'].includes(i.category))));
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +27,10 @@ export const SchemesView: React.FC<{
       category: category || 'Outreach Event',
       description: description.trim(),
       eligibility: (eligibility || '').trim() || 'Open to all Singapore residents.',
-      organisation: (organisation || '').trim() || 'Social Services'
+      organisation: (organisation || '').trim() || 'Social Services',
+      contactPhone: contactPhone.trim() || undefined,
+      contactEmail: contactEmail.trim() || undefined,
+      website: website.trim() || undefined
     };
     if (typeof setInitiatives === 'function') {
       setInitiatives(prev => [...(prev || []), newItem]);
@@ -33,6 +39,9 @@ export const SchemesView: React.FC<{
     setDescription('');
     setEligibility('');
     setOrganisation('');
+    setContactPhone('');
+    setContactEmail('');
+    setWebsite('');
     setShowAdd(false);
   };
 
@@ -64,17 +73,25 @@ export const SchemesView: React.FC<{
             <option value="Upskilling">Upskilling</option>
             <option value="Outreach Event">Outreach Event</option>
             <option value="Activity">Activity</option>
+            <option value="Other">Other</option>
           </select>
-          <input type="text" placeholder="Organisation" value={organisation} onChange={e => setOrganisation(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20" />
-          <textarea placeholder="Description" required rows={2} value={description} onChange={e => setDescription(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20" />
-          <input type="text" placeholder="Eligibility Criteria" value={eligibility} onChange={e => setEligibility(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20" />
+          <input type="text" placeholder="Organisation" value={organisation} onChange={e => setOrganisation(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+          <textarea placeholder="Description" required rows={2} value={description} onChange={e => setDescription(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+          <input type="text" placeholder="Eligibility Criteria" value={eligibility} onChange={e => setEligibility(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+          
+          <div className="grid grid-cols-2 gap-2">
+            <input type="text" placeholder="Phone Number" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+            <input type="email" placeholder="Email Address" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+          </div>
+          <input type="text" placeholder="Website URL (e.g. www.example.com)" value={website} onChange={e => setWebsite(e.target.value)} className="w-full p-3 bg-slate-900/40 rounded-xl text-xs text-white placeholder-white/20 focus:outline-none" />
+          
           <button type="submit" className="w-full py-3 bg-blue-600 text-white font-black uppercase text-xs rounded-xl shadow">Save Scheme</button>
         </form>
       )}
 
       {/* Filters */}
       <div className="flex gap-2 p-1 bg-white/5 border border-white/5 rounded-xl">
-        {(['all', 'Financial Bursary', 'Upskilling', 'Activity'] as const).map(f => (
+        {(['all', 'Financial Bursary', 'Upskilling', 'Activity', 'Other'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${filter === f ? 'glass-button text-blue-400' : 'text-white/40'}`}>
             {f === 'all' ? 'All' : f.split(' ')[0]}
           </button>
@@ -96,6 +113,15 @@ export const SchemesView: React.FC<{
                     <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 uppercase">{i.category}</span>
                   </div>
                   <p className="text-xs text-white/80 leading-relaxed">{i.description}</p>
+                  
+                  {(i.contactPhone || i.contactEmail || i.website) && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[9px] text-white/60 bg-slate-900/30 p-2.5 rounded-xl border border-white/5 font-medium">
+                      {i.contactPhone && <span className="flex items-center gap-1">📞 {i.contactPhone}</span>}
+                      {i.contactEmail && <span className="flex items-center gap-1">✉️ {i.contactEmail}</span>}
+                      {i.website && <span className="flex items-center gap-1 truncate max-w-full">🌐 {i.website}</span>}
+                    </div>
+                  )}
+                  
                   <div className="text-[9px] text-white/40 border-t border-white/5 pt-2 font-bold uppercase"><span className="text-blue-400">Eligibility:</span> {i.eligibility}</div>
                 </div>
               ))}

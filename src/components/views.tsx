@@ -6,3 +6,4 @@ export { CoachingView } from './CoachingView';
 export { ProfilesView } from './ProfilesView';
 export { InitiativesView } from './InitiativesView';
 export { SchemesView } from './SchemesView';
+export { InsightsView } from './InsightsView';

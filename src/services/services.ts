@@ -1,7 +1,7 @@
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 import Groq from 'groq-sdk';
-import { Survey, CoachingOverview, QuestionCoaching, RecordingAnalysis, CommunityInitiative, ReferralRecommendation } from '../types/survey';
+import { Survey, CoachingOverview, QuestionCoaching, RecordingAnalysis, CommunityInitiative, ReferralRecommendation, ParticipantProfile, CumulativeInsights } from '../types/survey';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -248,6 +248,7 @@ export interface AIService {
   generatePracticeFeedback(transcript: string, survey: Survey, coachPersona?: string): Promise<any>;
   matchReferrals(responses: Record<string, string>, initiatives: CommunityInitiative[], interviewerNotes?: string): Promise<ReferralRecommendation[]>;
   scourInitiativesForSurvey(survey: Survey): Promise<CommunityInitiative[]>;
+  generateCumulativeInsights(profiles: ParticipantProfile[], survey: Survey): Promise<CumulativeInsights>;
 }
 
 const MOCK_LOOKUPS = {
@@ -377,9 +378,11 @@ export class MockAIService implements AIService {
       strengths: ['Clear communication', 'Active listening', 'Empathetic tone'],
       improvements: ['Maintain eye contact', 'Avoid interrupting', 'Ask more open‑ended follow‑ups'],
       detailedFeedback: [
-        { category: 'Conversational Flow', score: 78, feedback: 'Good pacing, but occasional interruptions.', suggestions: ['Allow more pauses for answers.'] },
-        { category: 'Question Clarity', score: 70, feedback: 'Some questions were phrased ambiguously.', suggestions: ['Rephrase to be more direct.'] },
-        { category: 'Empathy & Tone', score: 85, feedback: 'Demonstrated strong empathy.', suggestions: ['Use reflective statements more often.'] }
+        { category: 'Rapport & Empathy', score: 88, feedback: 'Great warmth and tone. You made the participant feel respected and safe.', suggestions: ['Try using more reflective affirmations like "That sounds challenging, thank you for sharing."'] },
+        { category: 'Pacing & Conversational Flow', score: 75, feedback: 'Generally good tempo, but you occasionally rushed into the next question without letting the participant expand.', suggestions: ['Allow 2-3 seconds of silence after a participant stops talking to give them space for deeper responses.'] },
+        { category: 'Question Phrasing & Clarity', score: 70, feedback: 'You read some questions word-for-word, which felt a bit transactional.', suggestions: ['Focus on stealth integration; rephrase questions naturally into the conversation instead of reading from the template.'] },
+        { category: 'Active Probing & Follow-up', score: 62, feedback: 'When the respondent mentioned income strain, you skipped straight to digital literacy instead of probing for details.', suggestions: ['Ask soft follow-ups like "Could you share a bit more about what makes that difficult?" when they signal distress.'] },
+        { category: 'Questionnaire Coverage', score: 80, feedback: 'You successfully completed most of the key fields in the questionnaire.', suggestions: ['Ensure that you cover the optional feedback question at the end if time permits.'] }
       ]
     };
   }
@@ -400,6 +403,59 @@ export class MockAIService implements AIService {
       { id: `init-mock-1`, title: `Financial Support for ${survey.name}`, category: 'Financial Bursary', description: 'Mock financial program related to the survey topics.', eligibility: 'Assessed based on questionnaire outcome.' },
       { id: `init-mock-2`, title: `Upskilling Program for ${survey.name}`, category: 'Upskilling', description: 'Mock training and placement classes.', eligibility: 'Unemployed or low-income residents.' }
     ];
+  }
+
+  async generateCumulativeInsights(profiles: ParticipantProfile[], survey: Survey): Promise<CumulativeInsights> {
+    const totalCount = profiles.length;
+    const surveyName = survey?.name || 'Community Needs Assessment';
+    return {
+      executiveSummary: `This cumulative analysis compiles feedback from ${totalCount} respondent${totalCount === 1 ? '' : 's'} who completed the ${surveyName}. The data points to a high prevalence of financial stress due to inflation, coupled with low awareness of digital training programs among senior participants. Immediate community-level intervention is recommended to bridge these resource gaps.`,
+      commonProblems: [
+        {
+          problemName: "Cost of Living & Food Inflation",
+          description: "Respondents report struggling to afford basic household items and groceries, leading to severe budgeting constraints.",
+          prevalencePercentage: totalCount > 0 ? 65 : 0,
+          severity: "High"
+        },
+        {
+          problemName: "Lack of Digital Literacy & Device Access",
+          description: "Frail and elderly participants express low confidence in navigating smartphones or online services, which isolates them from modern digital infrastructure.",
+          prevalencePercentage: totalCount > 0 ? 45 : 0,
+          severity: "Medium"
+        },
+        {
+          problemName: "Employment Disruption & Low Wage Stagnation",
+          description: "Working-age respondents face unstable work arrangements or require upskilling support to transition into higher-paying, stable jobs.",
+          prevalencePercentage: totalCount > 0 ? 35 : 0,
+          severity: "High"
+        }
+      ],
+      correlations: [
+        "Elderly respondents over the age of 60 correlate heavily (85%) with lack of digital literacy and device sharing.",
+        "Underemployed households are 3x more likely to need ComCare short-to-medium term assistance.",
+        "A strong pattern shows childcare demands are preventing female heads of households from taking full-time job roles."
+      ],
+      proactiveInitiatives: [
+        {
+          id: "pro-1",
+          title: "Block-by-Block Digital Literacy Helpdesks",
+          description: "Deploy youth volunteers to block void decks on weekends to help seniors download municipal apps and claim CDC vouchers.",
+          completed: false
+        },
+        {
+          id: "pro-2",
+          title: "Bulk Purchase Food Distribution Drive",
+          description: "Partner with a local charity to distribute dry ration bags monthly to residents flagged as high-need financial bursary candidates.",
+          completed: false
+        },
+        {
+          id: "pro-3",
+          title: "SkillsFuture Career Caravan",
+          description: "Organize a mobile career counseling and training enrolment booth inside the community center during the upcoming roadshow.",
+          completed: false
+        }
+      ]
+    };
   }
 }
 
@@ -779,15 +835,63 @@ CRITICAL RULES: Stay in character. Never mention AI. Keep it to 1-3 natural conv
   }
 
   async generatePracticeFeedback(transcript: string, survey: Survey, coachPersona?: string): Promise<any> {
+    const prompt = `Grade the interviewer's performance in this practice transcript:
+"${transcript}"
+
+You must evaluate them across exactly these 5 distinct coaching metrics:
+1. "Rapport & Empathy" (How warm, respectful, and safe they made the respondent feel)
+2. "Pacing & Conversational Flow" (Pacing of questions, conversational comfort, avoiding abrupt changes or interruptions)
+3. "Question Phrasing & Clarity" (How naturally and clearly questions were integrated into dialogue rather than sounding transactional or read verbatim)
+4. "Active Probing & Follow-up" (Ability to ask supportive follow-up questions when the respondent hints at challenges)
+5. "Questionnaire Coverage" (How cleanly and naturally they retrieved the required survey answers without badgering)
+
+Return JSON with this exact schema:
+{
+  "overallScore": 0-100,
+  "duration": "X mins",
+  "questionsAsked": X,
+  "strengths": ["...", "..."],
+  "improvements": ["...", "..."],
+  "detailedFeedback": [
+    {
+      "category": "Rapport & Empathy",
+      "score": 0-100,
+      "feedback": "Detailed evaluation text describing how they performed in this category.",
+      "suggestions": ["Specific actionable suggestion to improve this category."]
+    },
+    {
+      "category": "Pacing & Conversational Flow",
+      "score": 0-100,
+      "feedback": "...",
+      "suggestions": ["..."]
+    },
+    {
+      "category": "Question Phrasing & Clarity",
+      "score": 0-100,
+      "feedback": "...",
+      "suggestions": ["..."]
+    },
+    {
+      "category": "Active Probing & Follow-up",
+      "score": 0-100,
+      "feedback": "...",
+      "suggestions": ["..."]
+    },
+    {
+      "category": "Questionnaire Coverage",
+      "score": 0-100,
+      "feedback": "...",
+      "suggestions": ["..."]
+    }
+  ]
+}`;
+
     return this.callGroqJSON<any>(
       () => this.groq!.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'system', content: coachPersona ? `${coachPersona} You are a professional coach. JSON only.` : 'Rigorous interviewer coach. JSON only.' },
-          {
-            role: 'user',
-            content: `Grade the interviewer in this transcript:\n"${transcript}"\nReturn JSON: { "overallScore": 0-100, "duration": "X mins", "questionsAsked": X, "strengths": [], "improvements": [], "detailedFeedback": [] }`
-          }
+          { role: 'user', content: prompt }
         ],
         response_format: { type: 'json_object' }
       }),
@@ -908,6 +1012,78 @@ Return a JSON object in this exact structure:
       ...init,
       id: `init-${Date.now()}-${index}`
     })));
+  }
+
+  async generateCumulativeInsights(profiles: ParticipantProfile[], survey: Survey): Promise<CumulativeInsights> {
+    if (profiles.length === 0) {
+      return this.mockService.generateCumulativeInsights(profiles, survey);
+    }
+
+    const profileSummaries = profiles.map((p, index) => {
+      const name = p.responses[survey.questions[0]?.fieldName || ''] || `Participant ${index + 1}`;
+      const briefResponses = Object.entries(p.responses)
+        .map(([q, a]) => `- ${q}: ${a}`)
+        .join('\n');
+      const referrals = (p.referrals || [])
+        .map(ref => `- Matched: ${ref.initiativeTitle} (${ref.priority} priority - Status: ${ref.status || 'Matched'})`)
+        .join('\n');
+      
+      return `### Respondent #${index + 1}: ${name}
+Completeness: ${p.completeness}%
+Interviewer Notes: ${p.interviewerNotes || 'None'}
+Responses:
+${briefResponses}
+Matched Support Programs:
+${referrals}`;
+    }).join('\n\n');
+
+    const prompt = `Task: Perform a cumulative, aggregate trend analysis across a database of ${profiles.length} participant interviews.
+Survey Name: ${survey.name}
+Survey Questions: ${JSON.stringify(survey.questions.map(q => q.fieldName))}
+
+Participant Profile Database:
+${profileSummaries}
+
+Based on this data, construct an analysis in JSON format containing:
+1. "executiveSummary": A comprehensive, high-level summary of findings, dominant trends, and resource bottlenecks. (2-3 sentences)
+2. "commonProblems": An array of top 3-4 recurring issues found in the database. For each issue, output:
+   - "problemName": Short descriptive label (e.g. "Rental Arrears", "Senior Digital Literacy Gaps").
+   - "description": 1-2 sentence explanation of why this is a recurring problem based on interviewee responses.
+   - "prevalencePercentage": Estimated percentage of the respondent pool suffering from this issue (0-100).
+   - "severity": "High" | "Medium" | "Low" based on urgency.
+3. "correlations": An array of 3 specific patterns, demographics links, or structural insights. (e.g., "Seniors are disproportionately isolated", "Low income directly links to low device ownership").
+4. "proactiveInitiatives": An array of 3 highly actionable, concrete local events/initiatives the community organization can run to proactively address these specific trends. Output:
+   - "id": unique string ID.
+   - "title": e.g. "FSC Counselling Caravan".
+   - "description": Concise description of what the initiative does.
+   - "completed": false
+
+Format the output strictly as a JSON object conforming to the CumulativeInsights schema:
+{
+  "executiveSummary": "...",
+  "commonProblems": [
+    { "problemName": "...", "description": "...", "prevalencePercentage": 60, "severity": "High" }
+  ],
+  "correlations": [
+    "..."
+  ],
+  "proactiveInitiatives": [
+    { "id": "...", "title": "...", "description": "...", "completed": false }
+  ]
+}`;
+
+    return this.callGroqJSON<CumulativeInsights>(
+      () => this.groq!.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: 'You are an advanced social science researcher and community program coordinator. Strictly respond in JSON.' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' }
+      }),
+      async () => this.mockService.generateCumulativeInsights(profiles, survey),
+      'generateCumulativeInsights'
+    );
   }
 }
 

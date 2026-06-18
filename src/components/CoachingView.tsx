@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Lightbulb, Target, ChevronRight, VolumeX, Sparkles, Keyboard, Phone, ChevronDown, 
   CheckSquare, Square, Mic, MicOff, MessageCircle, Award, Clock, MessageSquare, 
-  TrendingUp, CheckCircle 
+  TrendingUp, CheckCircle, BarChart2 
 } from 'lucide-react';
 import { Survey, CoachingOverview, QuestionCoaching, isQuestionCovered } from '../types/survey';
 import { createAIService, createSpeechService } from '../services/services';
@@ -198,6 +198,49 @@ export const CoachingView: React.FC<{ survey: Survey }> = ({ survey }) => {
             <p className="text-[9px] font-black uppercase text-white/50">Questions Asked</p>
           </div>
         </div>
+
+        {feedbackData.detailedFeedback && feedbackData.detailedFeedback.length > 0 && (
+          <div className="space-y-4 animate-in">
+            <h3 className="text-xs font-black text-white/60 uppercase tracking-wider pl-1 flex items-center gap-1.5">
+              <BarChart2 size={12} className="text-blue-400" />
+              Detailed Metric Ratings
+            </h3>
+            
+            <div className="space-y-3">
+              {feedbackData.detailedFeedback.map((m: any, idx: number) => {
+                const isHigh = m.score >= 80;
+                const isMedium = m.score >= 60 && m.score < 80;
+                const barColor = isHigh ? 'bg-green-500' : isMedium ? 'bg-amber-500' : 'bg-red-500';
+                const textColor = isHigh ? 'text-green-400' : isMedium ? 'text-amber-400' : 'text-red-400';
+                
+                return (
+                  <div key={idx} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-white">{m.category}</span>
+                      <span className={`font-black ${textColor}`}>{m.score}%</span>
+                    </div>
+                    
+                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${m.score}%` }}></div>
+                    </div>
+                    
+                    <div className="text-[11px] text-white/70 leading-relaxed font-medium bg-slate-950/40 p-2.5 rounded-xl border border-white/5 space-y-2">
+                      <p>{m.feedback}</p>
+                      {m.suggestions && (Array.isArray(m.suggestions) ? m.suggestions.length > 0 : String(m.suggestions).trim().length > 0) && (
+                        <div className="border-t border-white/5 pt-1.5 mt-1.5 text-[10px] text-white/50">
+                          <span className="font-black text-[9px] uppercase tracking-wider text-blue-400 block mb-0.5">Tip to improve:</span>
+                          <span className="italic">
+                            {Array.isArray(m.suggestions) ? m.suggestions.join(' ') : m.suggestions}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="glass-card rounded-[2rem] p-6 space-y-4">
           <h3 className="flex items-center gap-2 font-black text-[10px] uppercase text-white"><TrendingUp size={16} className="text-green-400" /> Strengths</h3>

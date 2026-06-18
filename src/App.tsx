@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Upload, Zap, Mic, Users, Sparkles, Database } from 'lucide-react';
-import { HomeView, CoachingView, RecordingView, ProfilesView, InitiativesView, SchemesView, ErrorBoundary } from './components/views';
+import { Upload, Zap, Mic, Users, Sparkles, Database, BarChart2 } from 'lucide-react';
+import { HomeView, CoachingView, RecordingView, ProfilesView, InitiativesView, SchemesView, InsightsView, ErrorBoundary } from './components/views';
 import { Survey, ParticipantProfile, RecordingAnalysis, CommunityInitiative, DEFAULT_INITIATIVES } from './types/survey';
 import { createAIService } from './services/services';
 
-type Tab = 'home' | 'training' | 'record' | 'profiles' | 'initiatives' | 'schemes';
+type Tab = 'home' | 'training' | 'record' | 'profiles' | 'initiatives' | 'schemes' | 'insights';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -67,6 +67,7 @@ function App() {
     { id: 'training' as Tab, label: 'Training Lab', icon: Zap, disabled: !currentSurvey },
     { id: 'record' as Tab, label: 'Live Capture', icon: Mic, disabled: !currentSurvey },
     { id: 'profiles' as Tab, label: 'Profiles', icon: Users },
+    { id: 'insights' as Tab, label: 'Insights', icon: BarChart2, disabled: !currentSurvey },
     { id: 'initiatives' as Tab, label: 'Outreach', icon: Sparkles },
     { id: 'schemes' as Tab, label: 'Schemes', icon: Database },
   ];
@@ -104,12 +105,14 @@ function App() {
               selectedProfileId={selectedProfileId}
               onUpdateProfile={u => setProfiles(prev => prev.map(p => p.id === u.id ? u : p))}
               onClearSelection={() => { setSelectedProfileId(null); setActiveTab('profiles'); }}
+              initiatives={initiatives}
             />
           )}
+          {activeTab === 'insights' && <InsightsView survey={currentSurvey} profiles={profiles} />}
           {activeTab === 'schemes' && <SchemesView initiatives={initiatives} setInitiatives={setInitiatives} />}
         </main>
 
-        <nav className="absolute bottom-8 left-6 right-6 glass-nav rounded-3xl p-2.5 flex items-center justify-around z-50">
+        <nav className="absolute bottom-8 left-4 right-4 glass-nav rounded-3xl p-1.5 flex items-center justify-between gap-1 z-50">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -119,15 +122,15 @@ function App() {
                 key={tab.id}
                 onClick={() => !isDisabled && setActiveTab(tab.id)}
                 disabled={isDisabled}
-                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${isActive
+                className={`flex-1 flex flex-col items-center gap-1 py-1 px-0.5 rounded-xl transition-all ${isActive
                     ? 'bg-blue-500/30 text-white scale-105 shadow-md shadow-blue-500/25 backdrop-blur-sm'
                     : isDisabled
                       ? 'text-white/30 opacity-30 cursor-not-allowed'
                       : 'text-white/60 hover:text-white hover:bg-white/10'
                   }`}
               >
-                <Icon size={16} />
-                <span className="text-[7px] font-black uppercase tracking-wider">{tab.label.split(' ')[0]}</span>
+                <Icon size={14} />
+                <span className="text-[6.5px] font-black uppercase tracking-tight text-center">{tab.label.split(' ')[0]}</span>
               </button>
             );
           })}
