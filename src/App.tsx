@@ -77,7 +77,7 @@ function App() {
       <div className="w-full max-w-md h-full flex flex-col relative overflow-hidden glass-container">
         <header className="glass-header p-6 flex-shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl font-black text-white tracking-tighter uppercase flex-shrink-0">Clairo</h1>
+            <h1 className="text-xl font-black text-white tracking-tighter uppercase flex-shrink-0" title="Conversational Assessment & Routing Engine for Outreach">CARE-O</h1>
             {currentSurvey && (
               <div className="glass-inset px-3 py-1 rounded-full max-w-[60%] truncate" title={`Active: ${currentSurvey.name}`}>
                 <span className="text-[9px] font-black text-green-400 uppercase tracking-tighter block truncate">Active: {currentSurvey.name}</span>

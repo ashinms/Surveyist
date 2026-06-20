@@ -1,12 +1,12 @@
-I want to build a fully featured, responsive React + Vite + TypeScript application called **Surveyist**.
+I want to build a fully featured, responsive React + Vite + TypeScript application called **CARE-O: Conversational Assessment & Routing Engine for Outreach**.
 
 ### 📱 Premium Design Layout Requirement:
-*   **Surveyist** is styled and structured as a **mobile-first web application** mirroring high-end iOS/Android apps.
+*   **CARE-O** is styled and structured as a **mobile-first web application** mirroring high-end iOS/Android apps.
 *   The UI must render inside a centered container with a maximum width of `max-w-md` and height of `h-[100dvh]` (to simulate a premium mobile app frame on desktop viewports) while scaling natively to full screen on actual mobile devices.
 *   It features a sticky, glassmorphism bottom navigation bar typical of modern mobile application designs.
 
 ### 🌐 System Architecture & Workflow Description:
-Surveyist is a professional, AI-driven interview training lab and community outreach matching application designed for social workers and outreach volunteers. Below is the explicit step-by-step user workflow and navigation flow that the code must support:
+CARE-O is a professional, AI-driven interview training lab and community outreach matching application designed for social workers and outreach volunteers. Below is the explicit step-by-step user workflow and navigation flow that the code must support:
 
 1.  **Phase 1: Survey Import & Tab Locking (Landing State)**
     *   **User Action**: The app opens to the **Import** tab. To prevent navigation to empty views, the **Training Lab**, **Live Capture**, **Profiles**, **Outreach**, and **Schemes** tabs must be locked and disabled (`disabled: !currentSurvey`).
@@ -31,10 +31,11 @@ Surveyist is a professional, AI-driven interview training lab and community outr
     *   **Document Generation**: The user can export responses as plain text or as a pre-populated Word document (using client-side `docxtemplater` to replace template tags).
     *   **Matching Transition**: Clicking "Outreach Matcher" sets the active profile ID and shifts the view to the **Outreach** tab.
 
-5.  **Phase 5: Support Scheme Outreach Tracker**
+5.  **Phase 5: Support Scheme Outreach Tracker & WhatsApp Outreach**
     *   **User Action**: The **Outreach** tab matches the respondent's answers against a local initiatives database (containing CDC vouchers, ComCare aid, SkillsFuture credits, and elderly support programs).
     *   **Interactive Pipeline**: Users manage each matched scheme along a visual status pipeline (Matched -> Drafted -> Dispatched -> Approved -> Closed).
     *   **Email Dispatches**: The user drafts and dispatches personalized emails to the participant and intake offices.
+    *   **WhatsApp Outreach**: Features a dynamic AI-Automated WhatsApp template preview that assesses the participant's needs (Shelter/Housing, Financial/SSO, Medical, Food Insecurity) and lists relevant emergency links. The user can manually toggle needs via on-screen buttons, live-preview the message, copy it, or send it directly.
 
 6.  **Phase 6: Support Schemes Database**
     *   **User Action**: The **Schemes** tab displays the global master list of programs and includes an editor to add/remove custom schemes dynamically, modifying the matching engine.

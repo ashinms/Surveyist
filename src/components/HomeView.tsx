@@ -211,8 +211,8 @@ export const HomeView: React.FC<{
   return (
     <div className="p-6 min-h-full font-sans space-y-6">
       <div className="text-center mb-6 pt-6">
-        <h1 className="text-5xl font-black text-white mb-2 tracking-tighter uppercase drop-shadow-lg">Clairo</h1>
-        <p className="text-white/80 text-base font-medium max-w-xs mx-auto leading-tight">AI-Driven Precision for Professional Interview Excellence</p>
+        <h1 className="text-5xl font-black text-white mb-2 tracking-tighter uppercase drop-shadow-lg" title="Conversational Assessment & Routing Engine for Outreach">CARE-O</h1>
+        <p className="text-white/80 text-xs font-semibold max-w-xs mx-auto leading-normal tracking-wide uppercase">Conversational Assessment & Routing Engine for Outreach</p>
       </div>
 
       {currentSurvey && (

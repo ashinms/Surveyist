@@ -33,6 +33,73 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
   const selectedProfile = profiles.find(p => p.id === selectedProfileId);
   const matchedReferrals = selectedProfile?.referrals || [];
 
+  const [manualNeeds, setManualNeeds] = useState<{
+    shelter: boolean | null;
+    financial: boolean | null;
+    medical: boolean | null;
+    food: boolean | null;
+  }>({ shelter: null, financial: null, medical: null, food: null });
+
+  const detectNeeds = () => {
+    if (!selectedProfile) return { shelter: false, financial: false, medical: false, food: false };
+    const responsesStr = JSON.stringify(selectedProfile.responses).toLowerCase();
+    const notesStr = (selectedProfile.interviewerNotes || '').toLowerCase();
+    const refsStr = matchedReferrals.map(r => r.initiativeTitle + ' ' + r.matchReason + ' ' + r.category).join(' ').toLowerCase();
+    const combined = `${responsesStr} ${notesStr} ${refsStr}`;
+
+    const autoShelter = combined.includes('shelter') || combined.includes('housing') || combined.includes('homeless') || combined.includes('rough sleep') || combined.includes('accommodation');
+    const autoFinancial = combined.includes('financial') || combined.includes('income') || combined.includes('comcare') || combined.includes('sso') || combined.includes('bursary') || combined.includes('grant') || combined.includes('allowance') || combined.includes('cash') || combined.includes('debt') || combined.includes('bill');
+    const autoMedical = combined.includes('medical') || combined.includes('health') || combined.includes('doctor') || combined.includes('clinic') || combined.includes('hospital') || combined.includes('healthcare') || combined.includes('check-up') || combined.includes('illness');
+    const autoFood = combined.includes('food') || combined.includes('meals') || combined.includes('eat') || combined.includes('hungry') || combined.includes('groceries') || combined.includes('soup kitchen') || combined.includes('food bank') || combined.includes('food insecurity');
+
+    return {
+      shelter: manualNeeds.shelter !== null ? manualNeeds.shelter : autoShelter,
+      financial: manualNeeds.financial !== null ? manualNeeds.financial : autoFinancial,
+      medical: manualNeeds.medical !== null ? manualNeeds.medical : autoMedical,
+      food: manualNeeds.food !== null ? manualNeeds.food : autoFood,
+    };
+  };
+
+  const activeNeeds = detectNeeds();
+
+  const getWhatsAppTemplateMessage = () => {
+    const pName = selectedProfile ? selectedProfile.responses[survey?.questions[0]?.fieldName || ''] || 'Participant' : 'Participant';
+    
+    const resourceBlocks: string[] = [];
+    if (activeNeeds.shelter) {
+      resourceBlocks.push(`📍 *For Safe Accommodation & Shelter Tonight:*\nFind an immediate safe space to sleep through the PEERS Network partners: 👉 https://www.msf.gov.sg/what-we-do/rough-sleepers`);
+    }
+    if (activeNeeds.financial) {
+      resourceBlocks.push(`💰 *For Urgent Financial Aid & Social Support:*\nLocate your nearest Social Service Office (SSO) to walk in for ComCare assistance: 👉 https://www.supportgowhere.gov.sg`);
+    }
+    if (activeNeeds.medical) {
+      resourceBlocks.push(`🏥 *For Free Medical Care & Check-ups:*\nVisit a mobile or community outreach clinic for free healthcare: 👉 https://mtalvernia.sg/outreach/`);
+    }
+    if (activeNeeds.food) {
+      resourceBlocks.push(`🍲 *For Free Daily Meals & Food Packs:*\nFind free hot meals and soup kitchens in your immediate area: 👉 Home - The Food Bank Singapore`);
+    }
+
+    const dynamic_resource_list = resourceBlocks.length > 0 
+      ? resourceBlocks.join('\n\n')
+      : `_No immediate emergency resources selected. Use the toggles below to add resources._`;
+
+    return `Hi ${pName}, it was really nice chatting with you just now. Thank you for sharing your story with us.\n\n` +
+      `Our system is currently processing your information to match you with the best financial, housing, and social support workflows.\n\n` +
+      `While we finalize your application and prepare your next steps, here is a list of immediate resources tailored to your situation that you can approach right away:\n\n` +
+      `${dynamic_resource_list}\n\n` +
+      `Please take care, and our team will text you an update right here as soon as your primary application details are verified! If you need anything urgent in the meantime, feel free to reply to this message.`;
+  };
+
+  const getWhatsAppTemplateLink = () => {
+    const text = getWhatsAppTemplateMessage();
+    const encodedText = encodeURIComponent(text);
+    const cleanedPhone = cleanPhoneNumber(participantPhone);
+    if (cleanedPhone) {
+      return `https://wa.me/${cleanedPhone}?text=${encodedText}`;
+    }
+    return `https://wa.me/?text=${encodedText}`;
+  };
+
   const cleanPhoneNumber = (phone: string) => {
     const cleaned = phone.replace(/[^\d+]/g, '');
     if (cleaned.length === 8 && /^[89]/.test(cleaned)) {
@@ -245,6 +312,95 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
             </div>
           );
         })}
+      </div>
+
+      {/* AI-Automated WhatsApp Outreach Card */}
+      <div className="glass-card rounded-[2rem] p-6 space-y-4 border border-white/5 text-left font-sans">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <WhatsAppIcon size={18} className="text-green-400" />
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">AI WhatsApp Template</h3>
+          </div>
+          <span className="text-[8px] font-black uppercase bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">Auto-Assessed</span>
+        </div>
+
+        <p className="text-[10px] text-white/60 leading-normal">
+          Based on responses and matches, we dynamically generate a tailored resource text message. Toggle options below to manually include or exclude immediate emergency support lines.
+        </p>
+
+        {/* Dynamic Need Toggles */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          {[
+            { key: 'shelter' as const, label: 'Shelter & Housing', emoji: '📍' },
+            { key: 'financial' as const, label: 'Urgent Financial Aid', emoji: '💰' },
+            { key: 'medical' as const, label: 'Free Medical Care', emoji: '🏥' },
+            { key: 'food' as const, label: 'Free Daily Meals', emoji: '🍲' }
+          ].map(need => {
+            const val = activeNeeds[need.key];
+            const isOverridden = manualNeeds[need.key] !== null;
+
+            return (
+              <button
+                key={need.key}
+                onClick={() => {
+                  setManualNeeds(prev => ({
+                    ...prev,
+                    [need.key]: manualNeeds[need.key] === null ? !val : manualNeeds[need.key] ? false : manualNeeds[need.key] === false ? null : false
+                  }));
+                }}
+                className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                  val 
+                    ? 'bg-green-500/10 border-green-500/35 text-white' 
+                    : 'bg-white/5 border-white/10 text-white/50'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xs">{need.emoji}</span>
+                  <span className={`text-[7px] font-black uppercase px-1 rounded ${
+                    isOverridden 
+                      ? 'bg-yellow-500/20 text-yellow-400' 
+                      : val 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : 'bg-white/10 text-white/40'
+                  }`}>
+                    {isOverridden ? 'Manual' : val ? 'Detected' : 'Off'}
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold mt-1.5 leading-none">{need.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Message Preview Container */}
+        <div className="space-y-1.5 pt-2">
+          <span className="block text-[8px] font-black text-blue-400 uppercase tracking-widest">Live Template Preview</span>
+          <div className="p-4 bg-slate-950/80 border border-white/5 rounded-2xl text-[11px] text-white/80 font-mono leading-relaxed whitespace-pre-wrap max-h-52 overflow-y-auto select-all">
+            {getWhatsAppTemplateMessage()}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2.5 pt-2">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(getWhatsAppTemplateMessage());
+              alert("WhatsApp template message copied to clipboard!");
+            }}
+            className="flex-1 py-3 glass-button rounded-xl text-[10px] font-black uppercase text-white/90 tracking-wide hover:scale-[1.01] active:scale-[0.99] transition-all"
+          >
+            Copy Message
+          </button>
+          <a
+            href={getWhatsAppTemplateLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1.5 shadow-lg shadow-green-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
+          >
+            <WhatsAppIcon size={12} />
+            <span>Send WhatsApp</span>
+          </a>
+        </div>
       </div>
 
       {matchedReferrals.some(r => r.selected && !r.followedUp) && (

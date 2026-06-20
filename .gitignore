@@ -15,3 +15,8 @@ build/
 scratch/
 Thumbs.db
 Desktop.ini
+.env
+.env.production
+.env.local
+*.local
+
