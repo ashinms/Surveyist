@@ -100,7 +100,7 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
     return `https://wa.me/?text=${encodedText}`;
   };
 
-  const getCAREOFollowUpPrompt = () => {
+  const getAIContinuityPrompt = () => {
     const pName = selectedProfile ? selectedProfile.responses[survey?.questions[0]?.fieldName || ''] || 'Participant' : 'Participant';
     const emailField = survey?.questions.find(q => q.fieldName.toLowerCase().includes('email'))?.fieldName || '';
     const participantEmail = selectedProfile ? selectedProfile.responses[emailField] || `${pName.toLowerCase().replace(/\s+/g, '.')}@gmail.com` : 'N/A';
@@ -121,28 +121,29 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
       ? selectedProfile.dispatchedEmails.map(log => `- Sent ${log.recipientType} Email to ${log.recipient} on ${new Date(log.timestamp).toLocaleDateString()}: "${log.subject}"`).join('\n')
       : 'No outreach emails dispatched yet';
 
-    return `You are an AI outreach and follow-up assistant helping a community surveyor.
+    return `You are an AI outreach continuity assistant helping a community surveyor after a CARE-O assessment.
 
 You are receiving structured CARE-O data from the Conversational Assessment & Routing Engine for Outreach.
 
-CARE-O helps surveyors conduct conversational assessments, extract participant needs, match support schemes, and prepare follow-up workflows.
+Email and WhatsApp drafting are already handled elsewhere in CARE-O. Do not draft the main email or WhatsApp follow-up unless specifically needed for a check-in or resource reminder.
 
-Please use the participant profile below to generate practical follow-up materials for both:
-1. the surveyor/outreach worker, and
-2. the surveyee/participant.
+Your job is to generate:
+1. regular check-in messages,
+2. immediate resource reminders,
+3. a future update schedule,
+4. an escalation review,
+5. and a future scheme monitoring plan.
 
 Important rules:
 - Be warm, respectful, concise, and non-judgmental.
-- Do not invent facts that are not present in the CARE-O context.
+- Do not invent participant facts.
 - Clearly mark assumptions.
 - Do not promise that support is guaranteed.
 - Do not diagnose medical, legal, financial, or mental health conditions.
 - If urgent risk is detected, recommend human review.
-- Participant-facing messages should be simple, reassuring, and easy to act on.
-- Surveyor-facing messages can be structured and operational.
-- If participant email is available, draft an email follow-up.
-- If participant phone/WhatsApp is available, draft a WhatsApp/SMS follow-up.
-- If contact information is missing, still draft the message body and note that contact details are missing.
+- Participant-facing messages should be simple and reassuring.
+- Surveyor-facing guidance should be practical and operational.
+- If a future scheme/resource may be relevant, phrase it as “monitor for” or “notify if available,” not as a guaranteed benefit.
 
 CARE-O CONTEXT
 
@@ -211,81 +212,140 @@ If the CARE-O context suggests job search, employment, career transition, traini
 Explore SkillsFuture and career transition support:
 https://www.skillsfuture.gov.sg
 
+FUTURE SCHEME MONITORING RULES
+
+Based on the participant’s detected needs, recommend what kinds of future schemes or resources the surveyor should monitor for.
+
+Examples:
+- If financial need is detected, monitor for new ComCare, CDC, municipal, charity, or emergency relief schemes.
+- If housing/shelter need is detected, monitor for shelter, rental assistance, temporary accommodation, rough-sleeper support, or family mediation resources.
+- If food insecurity is detected, monitor for food banks, meal programmes, grocery vouchers, soup kitchens, or community pantry programmes.
+- If medical need is detected, monitor for free clinics, mobile health screenings, medication subsidies, community health outreach, or specialist referral programmes.
+- If employment/upskilling need is detected, monitor for job fairs, SkillsFuture subsidies, placement programmes, resume clinics, career coaching, or short-term training grants.
+- If senior/digital access need is detected, monitor for digital literacy classes, subsidized devices, telco support, senior activity centres, or befriending programmes.
+- If family/dependent support is detected, monitor for childcare aid, caregiver support, family service centre programmes, school assistance, or respite care.
+
 TASKS
 
-Please generate the following:
+Please generate the following sections only:
 
-1. Internal case summary for the surveyor.
-2. Key needs and risk factors.
-3. Recommended next steps for the surveyor.
-4. Missing information the surveyor should collect.
-5. WhatsApp/SMS follow-up message for the participant.
-6. Email follow-up draft for the participant, if email is available.
-7. Regular check-in messages for Day 1, Day 3, Day 7, and Day 14.
-8. Immediate resource reminder based on detected needs.
-9. Suggested future update schedule.
-10. Escalation review with level: Low, Medium, High, or Urgent.
+## 1. Regular Check-in Messages
 
-OUTPUT FORMAT
-
-## 1. Internal Case Summary
-Summarize the participant’s situation in 4-6 concise bullet points.
-
-## 2. Key Needs and Risk Factors
-List detected needs and any risk factors. Separate confirmed facts from assumptions.
-
-## 3. Surveyor Next Steps
-Give a practical checklist for the surveyor/outreach worker.
-
-## 4. Missing Information to Collect
-List any important gaps in the participant profile.
-
-## 5. WhatsApp/SMS Follow-up Message
-Draft a warm, short participant-facing message. Thank them for sharing, explain that the team is reviewing next steps, include immediate resources if relevant, and invite them to reply if anything urgent changes.
-
-## 6. Email Follow-up Draft
-If participant email is available, draft:
-Subject:
-Body:
-
-If email is not available, write:
-"No participant email was provided. Draft body below for manual use:"
-Then provide the email body.
-
-## 7. Regular Check-in Messages
+Create participant-facing check-in messages for:
 
 ### Day 1 Check-in
-Short message.
+A short message asking how they are doing after the assessment and whether anything urgent has changed.
 
 ### Day 3 Check-in
-Short message.
+A short message reminding them that support matching/follow-up is ongoing and asking if they need help with immediate resources.
 
 ### Day 7 Check-in
-Short message.
+A short message checking whether they have contacted any suggested resources and whether they need help with applications or documents.
 
 ### Day 14 Check-in
-Short message.
+A short message checking longer-term status and whether their situation has changed.
 
-## 8. Immediate Resource Reminder
-List only the resources relevant to the participant’s detected needs. If no urgent category is detected, suggest SupportGoWhere as a general resource.
+Messages should:
+- be warm and simple,
+- not sound robotic,
+- avoid making promises,
+- invite the participant to reply if urgent support is needed.
 
-## 9. Future Update Schedule
-Suggest when the surveyor should next contact the participant and what each update should cover.
+## 2. Immediate Resource Reminder
 
-## 10. Escalation Review
-Level: Low / Medium / High / Urgent
+Using the CARE-O context and the resource rules above, list only the immediate resources relevant to the participant’s detected needs.
+
+For each resource:
+- include the emoji/title,
+- explain why it may be relevant in one sentence,
+- include the link,
+- keep wording careful: “may be useful” or “you can approach,” not “you are guaranteed.”
+
+If no specific urgent category is detected, recommend SupportGoWhere as a general resource.
+
+## 3. Future Update Schedule
+
+Create a practical follow-up schedule for the surveyor.
+
+Include:
+- when to check in,
+- what to verify,
+- what documents/info may be needed,
+- what referral statuses to update,
+- when to escalate to a human supervisor.
+
+Format as a timeline:
+- Within 24 hours
+- Within 3 days
+- Within 1 week
+- Within 2 weeks
+- After 1 month
+
+## 4. Escalation Review
+
+Assess whether this case should be flagged for additional human review.
+
+Use one of these levels:
+- Low
+- Medium
+- High
+- Urgent
+
+Consider:
+- no safe housing,
+- no food,
+- urgent medical issue,
+- safety risk,
+- no income,
+- dependent care stress,
+- mental distress,
+- repeated failed follow-ups,
+- missing critical information.
+
+Output:
+Level:
 Reasoning:
-Recommended human follow-up:`;
+Immediate concerns:
+Recommended human follow-up:
+Information still needed:
+
+Do not diagnose or make final eligibility decisions.
+
+## 5. Future Scheme Monitoring Plan
+
+Based on the participant’s needs, list the types of future schemes/resources that CARE-O or the surveyor should watch for.
+
+For each monitoring category, include:
+- Need category
+- What future schemes to monitor for
+- Why it matters for this participant
+- Suggested notification trigger
+- Who should be notified: surveyor, participant, or both
+
+Also write a short template message for notifying the participant if a newly relevant scheme becomes available.
+
+Output format:
+
+### Monitoring Category 1
+Need Category:
+Future Schemes to Monitor:
+Why It Matters:
+Notification Trigger:
+Notify:
+Suggested Participant Notification:
+
+### Monitoring Category 2
+...`;
   };
 
-  const downloadCAREOFollowUpPrompt = () => {
+  const downloadAIContinuityPrompt = () => {
     const pName = selectedProfile ? selectedProfile.responses[survey?.questions[0]?.fieldName || ''] || 'Participant' : 'Participant';
-    const payload = getCAREOFollowUpPrompt();
+    const payload = getAIContinuityPrompt();
     const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `care-o-followup-prompt-${pName.toLowerCase().replace(/\s+/g, '-')}.txt`;
+    link.download = `care-o-ai-continuity-prompt-${pName.toLowerCase().replace(/\s+/g, '-')}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -595,25 +655,25 @@ Recommended human follow-up:`;
         </div>
       </div>
 
-      {/* CARE-O AI Follow-up Prompt Card */}
+      {/* AI Continuity Prompt Card */}
       <div className="glass-card rounded-[2rem] p-6 space-y-4 border border-white/5 text-left font-sans">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain size={18} className="text-purple-400 animate-pulse" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider text-purple-300">CARE-O AI Follow-up Prompt</h3>
+            <h3 className="text-xs font-black text-white uppercase tracking-wider text-purple-300">AI Continuity Prompt</h3>
           </div>
-          <span className="text-[8px] font-black uppercase bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Prompt Template</span>
+          <span className="text-[8px] font-black uppercase bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Continuity Prompt</span>
         </div>
 
         <p className="text-[10px] text-white/60 leading-normal">
-          Generate a structured prompt you can paste into ChatGPT or Chatchat to draft follow-ups, check-ins, resource reminders, email drafts, and surveyor next steps.
+          Copy a structured prompt for check-ins, resource reminders, escalation review, and future scheme monitoring.
         </p>
 
         {/* Payload Preview */}
         <div className="space-y-1.5 pt-1">
-          <span className="block text-[8px] font-black text-purple-400 uppercase tracking-widest">Follow-up Prompt Preview</span>
+          <span className="block text-[8px] font-black text-purple-400 uppercase tracking-widest">AI Continuity Prompt Preview</span>
           <div className="p-4 bg-slate-950/80 border border-white/5 rounded-2xl text-[10px] text-white/70 font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto select-all">
-            {getCAREOFollowUpPrompt()}
+            {getAIContinuityPrompt()}
           </div>
         </div>
 
@@ -621,15 +681,15 @@ Recommended human follow-up:`;
         <div className="flex gap-2.5 pt-1">
           <button
             onClick={() => {
-              navigator.clipboard.writeText(getCAREOFollowUpPrompt());
-              alert("CARE-O Follow-up Prompt copied to clipboard!");
+              navigator.clipboard.writeText(getAIContinuityPrompt());
+              alert("AI Continuity Prompt copied to clipboard!");
             }}
             className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
           >
-            <span>Copy CARE-O Follow-up Prompt</span>
+            <span>Copy AI Continuity Prompt</span>
           </button>
           <button
-            onClick={downloadCAREOFollowUpPrompt}
+            onClick={downloadAIContinuityPrompt}
             className="py-3 px-4 glass-button rounded-xl text-[10px] font-black uppercase text-white/80 hover:text-white transition-all flex items-center justify-center"
             title="Download Prompt as TXT"
           >
