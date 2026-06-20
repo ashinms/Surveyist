@@ -100,49 +100,192 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
     return `https://wa.me/?text=${encodedText}`;
   };
 
-  const getChatchatBrainPayload = () => {
+  const getCAREOFollowUpPrompt = () => {
     const pName = selectedProfile ? selectedProfile.responses[survey?.questions[0]?.fieldName || ''] || 'Participant' : 'Participant';
     const emailField = survey?.questions.find(q => q.fieldName.toLowerCase().includes('email'))?.fieldName || '';
     const participantEmail = selectedProfile ? selectedProfile.responses[emailField] || `${pName.toLowerCase().replace(/\s+/g, '.')}@gmail.com` : 'N/A';
     
-    let payload = `# CARE-O Outreach Profile: ${pName}\n`;
-    payload += `- **Record Date**: ${new Date(selectedProfile?.timestamp || Date.now()).toLocaleString()}\n`;
-    payload += `- **Contact Phone**: ${participantPhone || 'N/A'}\n`;
-    payload += `- **Contact Email**: ${participantEmail}\n`;
-    payload += `- **Assessed Emergency Needs**:\n`;
-    payload += `  - Shelter/Housing Needed: ${activeNeeds.shelter ? 'YES' : 'NO'}\n`;
-    payload += `  - Financial/SSO Assistance Needed: ${activeNeeds.financial ? 'YES' : 'NO'}\n`;
-    payload += `  - Medical Outreach Needed: ${activeNeeds.medical ? 'YES' : 'NO'}\n`;
-    payload += `  - Food Support Needed: ${activeNeeds.food ? 'YES' : 'NO'}\n\n`;
+    const detectedNeedsList: string[] = [];
+    if (activeNeeds.shelter) detectedNeedsList.push("Shelter/Housing Need");
+    if (activeNeeds.financial) detectedNeedsList.push("Financial/SSO Need");
+    if (activeNeeds.medical) detectedNeedsList.push("Medical Need");
+    if (activeNeeds.food) detectedNeedsList.push("Food Insecurity");
+    const hasJobReferral = matchedReferrals.some(r => r.category.toLowerCase().includes('job') || r.category.toLowerCase().includes('upskill') || r.initiativeTitle.toLowerCase().includes('skillsfuture') || r.initiativeTitle.toLowerCase().includes('career'));
+    if (hasJobReferral) detectedNeedsList.push("Job Support & Upskilling");
 
-    payload += `## Matched Support Schemes & Referrals:\n`;
-    if (matchedReferrals.length === 0) {
-      payload += `_No schemes matched yet._\n`;
-    } else {
-      matchedReferrals.forEach((ref, idx) => {
-        payload += `### ${idx + 1}. ${ref.initiativeTitle}\n`;
-        payload += `- **Category**: ${ref.category}\n`;
-        payload += `- **Pipeline Status**: ${ref.status || 'Matched'}\n`;
-        payload += `- **Matching Reason**: ${ref.matchReason}\n\n`;
-      });
-    }
+    const detectedNeedsStr = detectedNeedsList.length > 0 ? detectedNeedsList.join(', ') : 'None explicitly detected';
+    
+    const responsesList = survey?.questions.map(q => `- ${q.fieldName}: ${selectedProfile?.responses[q.fieldName] || '—'}`).join('\n') || '';
+    const matchedSchemesList = matchedReferrals.map(ref => `- ${ref.initiativeTitle} (${ref.category}): ${ref.matchReason} [Priority: ${ref.priority}]`).join('\n') || 'None matched';
+    const dispatchHistoryList = selectedProfile?.dispatchedEmails && selectedProfile.dispatchedEmails.length > 0
+      ? selectedProfile.dispatchedEmails.map(log => `- Sent ${log.recipientType} Email to ${log.recipient} on ${new Date(log.timestamp).toLocaleDateString()}: "${log.subject}"`).join('\n')
+      : 'No outreach emails dispatched yet';
 
-    payload += `## Chatchat Integration Directives:\n`;
-    payload += `1. **Gmail Integration**: Draft and dispatch a confirmation email to the participant at \`${participantEmail}\` summarizing these matched resources.\n`;
-    payload += `2. **Organization Routing**: Trigger outreach request to relevant social service organizations for high priority needs.\n`;
-    payload += `3. **Memory Storage**: Save this profile to the living brain to track recurring cases and outreach performance.`;
+    return `You are an AI outreach and follow-up assistant helping a community surveyor.
 
-    return payload;
+You are receiving structured CARE-O data from the Conversational Assessment & Routing Engine for Outreach.
+
+CARE-O helps surveyors conduct conversational assessments, extract participant needs, match support schemes, and prepare follow-up workflows.
+
+Please use the participant profile below to generate practical follow-up materials for both:
+1. the surveyor/outreach worker, and
+2. the surveyee/participant.
+
+Important rules:
+- Be warm, respectful, concise, and non-judgmental.
+- Do not invent facts that are not present in the CARE-O context.
+- Clearly mark assumptions.
+- Do not promise that support is guaranteed.
+- Do not diagnose medical, legal, financial, or mental health conditions.
+- If urgent risk is detected, recommend human review.
+- Participant-facing messages should be simple, reassuring, and easy to act on.
+- Surveyor-facing messages can be structured and operational.
+- If participant email is available, draft an email follow-up.
+- If participant phone/WhatsApp is available, draft a WhatsApp/SMS follow-up.
+- If contact information is missing, still draft the message body and note that contact details are missing.
+
+CARE-O CONTEXT
+
+Participant Name:
+${pName}
+
+Participant Phone / WhatsApp:
+${participantPhone || 'Not Provided'}
+
+Participant Email:
+${participantEmail}
+
+Survey Name:
+${survey?.name || 'Community Assessment'}
+
+Profile Date:
+${selectedProfile ? new Date(selectedProfile.timestamp).toLocaleDateString() : 'N/A'}
+
+Profile Completeness:
+${selectedProfile?.completeness || 0}%
+
+Detected Needs:
+${detectedNeedsStr}
+
+Interviewer Notes:
+${selectedProfile?.interviewerNotes || 'None'}
+
+Survey Responses:
+${responsesList}
+
+Matched Support Schemes:
+${matchedSchemesList}
+
+Existing Outreach / Dispatch History:
+${dispatchHistoryList}
+
+IMMEDIATE RESOURCE RULES
+
+If the CARE-O context suggests housing, shelter, homelessness, rough sleeping, unsafe accommodation, eviction, or urgent accommodation need, include this resource:
+
+📍 Safe Accommodation & Shelter:
+Find an immediate safe space to sleep through the PEERS Network partners:
+https://www.msf.gov.sg/what-we-do/rough-sleepers
+
+If the CARE-O context suggests financial need, low income, no income, unemployment, debt, bills, urgent aid, rent, utilities, ComCare, or SSO need, include this resource:
+
+💰 Financial Aid & Social Support:
+Locate your nearest Social Service Office to walk in for ComCare assistance:
+https://www.supportgowhere.gov.sg
+
+If the CARE-O context suggests medical, health, clinic, hospital, medication, check-up, injury, illness, or healthcare need, include this resource:
+
+🏥 Medical Care & Check-ups:
+Visit a mobile or community outreach clinic for free healthcare:
+https://mtalvernia.sg/outreach/
+
+If the CARE-O context suggests food insecurity, skipped meals, hunger, groceries, food packs, free meals, or soup kitchen need, include this resource:
+
+🍲 Food Support:
+Find food support and food bank resources:
+https://www.foodbank.sg
+
+If the CARE-O context suggests job search, employment, career transition, training, upskilling, or reskilling need, include this resource:
+
+🎓 Job Support & Upskilling:
+Explore SkillsFuture and career transition support:
+https://www.skillsfuture.gov.sg
+
+TASKS
+
+Please generate the following:
+
+1. Internal case summary for the surveyor.
+2. Key needs and risk factors.
+3. Recommended next steps for the surveyor.
+4. Missing information the surveyor should collect.
+5. WhatsApp/SMS follow-up message for the participant.
+6. Email follow-up draft for the participant, if email is available.
+7. Regular check-in messages for Day 1, Day 3, Day 7, and Day 14.
+8. Immediate resource reminder based on detected needs.
+9. Suggested future update schedule.
+10. Escalation review with level: Low, Medium, High, or Urgent.
+
+OUTPUT FORMAT
+
+## 1. Internal Case Summary
+Summarize the participant’s situation in 4-6 concise bullet points.
+
+## 2. Key Needs and Risk Factors
+List detected needs and any risk factors. Separate confirmed facts from assumptions.
+
+## 3. Surveyor Next Steps
+Give a practical checklist for the surveyor/outreach worker.
+
+## 4. Missing Information to Collect
+List any important gaps in the participant profile.
+
+## 5. WhatsApp/SMS Follow-up Message
+Draft a warm, short participant-facing message. Thank them for sharing, explain that the team is reviewing next steps, include immediate resources if relevant, and invite them to reply if anything urgent changes.
+
+## 6. Email Follow-up Draft
+If participant email is available, draft:
+Subject:
+Body:
+
+If email is not available, write:
+"No participant email was provided. Draft body below for manual use:"
+Then provide the email body.
+
+## 7. Regular Check-in Messages
+
+### Day 1 Check-in
+Short message.
+
+### Day 3 Check-in
+Short message.
+
+### Day 7 Check-in
+Short message.
+
+### Day 14 Check-in
+Short message.
+
+## 8. Immediate Resource Reminder
+List only the resources relevant to the participant’s detected needs. If no urgent category is detected, suggest SupportGoWhere as a general resource.
+
+## 9. Future Update Schedule
+Suggest when the surveyor should next contact the participant and what each update should cover.
+
+## 10. Escalation Review
+Level: Low / Medium / High / Urgent
+Reasoning:
+Recommended human follow-up:`;
   };
 
-  const downloadBrainPayload = () => {
+  const downloadCAREOFollowUpPrompt = () => {
     const pName = selectedProfile ? selectedProfile.responses[survey?.questions[0]?.fieldName || ''] || 'Participant' : 'Participant';
-    const payload = getChatchatBrainPayload();
-    const blob = new Blob([payload], { type: 'text/markdown;charset=utf-8' });
+    const payload = getCAREOFollowUpPrompt();
+    const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `chatchat-brain-${pName.toLowerCase().replace(/\s+/g, '-')}.md`;
+    link.download = `care-o-followup-prompt-${pName.toLowerCase().replace(/\s+/g, '-')}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -452,25 +595,25 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
         </div>
       </div>
 
-      {/* Chatchat Living Brain Integration Card */}
+      {/* CARE-O AI Follow-up Prompt Card */}
       <div className="glass-card rounded-[2rem] p-6 space-y-4 border border-white/5 text-left font-sans">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Brain size={18} className="text-purple-400 animate-pulse" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">Chatchat Living Brain</h3>
+            <h3 className="text-xs font-black text-white uppercase tracking-wider text-purple-300">CARE-O AI Follow-up Prompt</h3>
           </div>
-          <span className="text-[8px] font-black uppercase bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Brain Memory Payload</span>
+          <span className="text-[8px] font-black uppercase bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Prompt Template</span>
         </div>
 
         <p className="text-[10px] text-white/60 leading-normal">
-          Upload this structured participant memory file directly into your Chatchat agent's <strong>Living Brain</strong> to feed its database and automate integrations like Gmail, routing queues, and social services.
+          Generate a structured prompt you can paste into ChatGPT or Chatchat to draft follow-ups, check-ins, resource reminders, email drafts, and surveyor next steps.
         </p>
 
         {/* Payload Preview */}
         <div className="space-y-1.5 pt-1">
-          <span className="block text-[8px] font-black text-purple-400 uppercase tracking-widest">Brain Payload Preview (.md)</span>
+          <span className="block text-[8px] font-black text-purple-400 uppercase tracking-widest">Follow-up Prompt Preview</span>
           <div className="p-4 bg-slate-950/80 border border-white/5 rounded-2xl text-[10px] text-white/70 font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto select-all">
-            {getChatchatBrainPayload()}
+            {getCAREOFollowUpPrompt()}
           </div>
         </div>
 
@@ -478,19 +621,19 @@ export const InitiativesView: React.FC<InitiativesViewProps> = ({ survey, profil
         <div className="flex gap-2.5 pt-1">
           <button
             onClick={() => {
-              navigator.clipboard.writeText(getChatchatBrainPayload());
-              alert("Chatchat living brain payload copied!");
+              navigator.clipboard.writeText(getCAREOFollowUpPrompt());
+              alert("CARE-O Follow-up Prompt copied to clipboard!");
             }}
-            className="flex-1 py-3 glass-button rounded-xl text-[10px] font-black uppercase text-white/90 tracking-wide hover:scale-[1.01] active:scale-[0.99] transition-all"
-          >
-            Copy Payload
-          </button>
-          <button
-            onClick={downloadBrainPayload}
             className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
           >
-            <Download size={12} />
-            <span>Download .MD File</span>
+            <span>Copy CARE-O Follow-up Prompt</span>
+          </button>
+          <button
+            onClick={downloadCAREOFollowUpPrompt}
+            className="py-3 px-4 glass-button rounded-xl text-[10px] font-black uppercase text-white/80 hover:text-white transition-all flex items-center justify-center"
+            title="Download Prompt as TXT"
+          >
+            <Download size={14} />
           </button>
         </div>
       </div>
